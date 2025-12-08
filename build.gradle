@@ -46,6 +46,7 @@ dependencies {
     implementation 'io.github.resilience4j:resilience4j-bulkhead'
     implementation 'io.github.resilience4j:resilience4j-ratelimiter'
     implementation 'io.micrometer:micrometer-core'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
 
     // Querydsl APT
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'

@@ -7,14 +7,14 @@ env:
   # AWS 및 ECR 설정
   AWS_REGION: ap-northeast-2                       # 본인의 AWS 리전으로 변경
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}    # GitHub Secrets에 AWS 계정 ID 추가
-  ECR_REPOSITORY: barrier-free-friends/서비스명    # ECR 저장소 이름
+  ECR_REPOSITORY: barrier-free-friends/report-service    # ECR 저장소 이름
   VERSION: ${{ github.sha }}                       # Commit SHA를 버전으로 사용
 
   # ⚙️ ECS 서비스 설정 (사전 생성 필요)
   ECS_CLUSTER: barrier-cluster                     # 생성된 ECS 클러스터 이름
-  ECS_SERVICE: 서비스 생성한 뒤 복사해뒀던 이름      # 생성된 ECS 서비스 이름
+  ECS_SERVICE: report-service-id-service-6s551ye7      # 생성된 ECS 서비스 이름
   ECS_TASK_DEFINITION: task-definition.json        # Task Definition 템플릿 파일 이름
-  CONTAINER_NAME: task definition에서 정의한 이름   # Task Definition 내부의 컨테이너 이름
+  CONTAINER_NAME: report-service-container   # Task Definition 내부의 컨테이너 이름
 jobs:
   Deploy:
     name: Build Docker Image and Deploy ECS
@@ -62,10 +62,10 @@ jobs:
           # 2. Spring Boot JAR 파일 빌드 및 Docker 이미지 빌드
           chmod +x gradlew
           ./gradlew bootJar
-          docker build -t user-service-container .
+          docker build -t report-service-container .
 
           # 3. ECR 경로로 리태그
-          docker tag user-service-container:latest $IMAGE_URI
+          docker tag report-service-container:latest $IMAGE_URI
 
       # ECR로 이미지 푸시 (GHCR push 대체)
       - name: Publish container image to ECR
