@@ -1,0 +1,92 @@
+package org.bf.reportservice.domain.entity;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.bf.global.domain.Auditable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@Entity
+@Table(name = "p_report")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Access(AccessType.FIELD)
+public class Report extends Auditable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false)
+    private UUID userId;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportStatus reportStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VerificationStatus verificationStatus;
+
+    private String verificationMessage;
+
+    @Column(nullable = false)
+    private boolean isPointRewarded;
+
+    private String category;
+
+    // 일대다 관계 설정
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<ReportImage> images = new ArrayList<>();
+
+    @Builder
+    private Report(UUID userId, String title, String content, String category) {
+        this.userId = userId;
+        this.title = title;
+        this.content = content;
+        this.category = category;
+        this.reportStatus = ReportStatus.PENDING;
+        this.verificationStatus = VerificationStatus.PENDING;
+        this.isPointRewarded = false;
+    }
+
+    // 이미지 연관관계 설정
+    public void addImage(ReportImage image) {
+        this.images.add(image);
+        image.setReport(this);
+    }
+
+    // 제보 소프트 삭제 처리
+    public void delete(String deletedBy) {
+        this.reportStatus = ReportStatus.REJECTED;
+        softDelete(deletedBy);
+    }
+
+    // AI 검증 결과 반영
+    public void updateVerificationResult(boolean success, String message) {
+        this.verificationMessage = message;
+        if(success) {
+            this.reportStatus = ReportStatus.APPROVED;
+            this.verificationStatus = VerificationStatus.SUCCESS;
+        } else {
+            this.reportStatus = ReportStatus.REJECTED;
+            this.verificationStatus = VerificationStatus.FAILED;
+        }
+    }
+
+    // 포인트 지급 완료 표시
+    public void markPointRewarded() {
+        this.isPointRewarded = true;
+    }
+}
