@@ -45,9 +45,10 @@ eureka:
 
 cloud:
   aws:
-    s3: #버킷이름
+    s3:
       bucket: barrier-free-friends
-    region: #S3 지역
-      static: ap-northeast-2
-    stack:
-      auto: false
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
