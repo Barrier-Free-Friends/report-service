@@ -57,8 +57,6 @@ dependencies {
     // Querydsl JPA
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
 
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-
 	compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	runtimeOnly 'org.postgresql:postgresql'
