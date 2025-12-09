@@ -42,3 +42,12 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://52.79.151.83:3150/eureka/
+
+cloud:
+  aws:
+    s3: #버킷이름
+      bucket: barrier-free-friends
+    region: #S3 지역
+      static: ap-northeast-2
+    stack:
+      auto: false
