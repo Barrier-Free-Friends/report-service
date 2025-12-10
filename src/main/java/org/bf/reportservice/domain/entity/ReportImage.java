@@ -38,8 +38,16 @@ public class ReportImage {
         this.address = address;
     }
 
-    // 연관관계 설정용 내부 메서드
     void setReport(Report report) {
         this.report = report;
+    }
+
+    public static ReportImage create(String fileUrl, Double latitude, Double longitude, String address) {
+        return ReportImage.builder()
+                .fileUrl(fileUrl)
+                .latitude(latitude)
+                .longitude(longitude)
+                .address(address)
+                .build();
     }
 }

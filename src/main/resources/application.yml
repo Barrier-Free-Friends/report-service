@@ -1,3 +1,6 @@
+server:
+  port: 4100
+
 spring:
   application:
     name: report-service
@@ -30,10 +33,22 @@ spring:
 eureka:
   instance:
     prefer-ip-address: false
-    hostname: localhost
+    hostname: ecs-load-balancer-597540403.ap-northeast-2.elb.amazonaws.com
+    non-secure-port: 4100
+    health-check-url-path: /actuator/health
 
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: http://52.79.151.83:3150/eureka/
+
+cloud:
+  aws:
+    s3:
+      bucket: barrier-free-friends
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: ${AWS_ACCESS_KEY_ID}
+      secretKey: ${AWS_SECRET_ACCESS_KEY}
