@@ -9,7 +9,7 @@ import org.bf.reportservice.domain.repository.ReportRepository;
 import org.bf.reportservice.infrastructure.api.AiVerificationClient;
 import org.bf.reportservice.infrastructure.api.dto.AiImageRequest;
 import org.bf.reportservice.infrastructure.api.dto.AiVerificationResponse;
-import org.bf.reportservice.presentation.dto.ReportRequest;
+import org.bf.reportservice.presentation.dto.ReportCreateRequest;
 import org.bf.reportservice.presentation.dto.ReportResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public class ReportService {
      * 4) 검증 결과 반영 상태 저장 후 응답 반환
      */
     @Transactional
-    public ReportResponse createReport(ReportRequest request, UUID userId) {
+    public ReportResponse createReport(ReportCreateRequest request, UUID userId) {
 
         if (request.images() == null || request.images().isEmpty() ) {
             throw new CustomException(ReportErrorCode.IMAGE_REQUIRED);
