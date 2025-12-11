@@ -31,6 +31,8 @@ public class Report extends Auditable {
     @Column(nullable = false)
     private String content;
 
+    private String category;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportStatus reportStatus;
@@ -43,8 +45,6 @@ public class Report extends Auditable {
 
     @Column(nullable = false)
     private boolean isPointRewarded;
-
-    private String category;
 
     // 일대다 관계 설정
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -70,18 +70,6 @@ public class Report extends Auditable {
     }
 
     /**
-     * 제보글 소프트 삭제
-     */
-    public void delete(String username) {
-        this.reportStatus = ReportStatus.DELETED;
-        softDelete(username);
-    }
-
-    public boolean isDeleted() {
-        return this.reportStatus == ReportStatus.DELETED;
-    }
-
-    /**
      * AI 검증 결과 반영
      * - 성공: APPROVED / SUCCESS
      * - 실패: REJECTED / FAILED
@@ -98,13 +86,6 @@ public class Report extends Auditable {
     }
 
     /**
-     * 포인트 지급 완료 상태 변경
-     */
-    public void markPointRewarded() {
-        this.isPointRewarded = true;
-    }
-
-    /**
      * 제보글 제목 및 내용 수정
      */
     public void updateContent(String title, String content) {
@@ -114,5 +95,24 @@ public class Report extends Auditable {
         if (content != null && !content.isBlank()) {
             this.content = content;
         }
+    }
+
+    /**
+     * 제보글 소프트 삭제
+     */
+    public void delete(String username) {
+        this.reportStatus = ReportStatus.DELETED;
+        softDelete(username);
+    }
+
+    public boolean isDeleted() {
+        return this.reportStatus == ReportStatus.DELETED;
+    }
+
+    /**
+     * 포인트 지급 완료 상태 변경
+     */
+    public void markPointRewarded() {
+        this.isPointRewarded = true;
     }
 }
