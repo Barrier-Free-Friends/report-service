@@ -31,7 +31,9 @@ public class Report extends Auditable {
     @Column(nullable = false)
     private String content;
 
-    private String category;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportCategory category;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -51,7 +53,7 @@ public class Report extends Auditable {
     private final List<ReportImage> images = new ArrayList<>();
 
     @Builder
-    private Report(UUID userId, String title, String content, String category) {
+    private Report(UUID userId, String title, String content, ReportCategory category) {
         this.userId = userId;
         this.title = title;
         this.content = content;
@@ -95,6 +97,16 @@ public class Report extends Auditable {
         if (content != null && !content.isBlank()) {
             this.content = content;
         }
+    }
+
+    /**
+     * 카테고리 수정
+     */
+    public void updateCategory(ReportCategory category) {
+        if (category == null) {
+            return;
+        }
+        this.category = category;
     }
 
     /**
