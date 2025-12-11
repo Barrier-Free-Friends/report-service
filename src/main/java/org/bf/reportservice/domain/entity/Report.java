@@ -61,19 +61,27 @@ public class Report extends Auditable {
         this.isPointRewarded = false;
     }
 
-    // 이미지 연관관계 설정
+    /**
+     * 이미지 추가
+     */
     public void addImage(ReportImage image) {
         this.images.add(image);
         image.setReport(this);
     }
 
-    // 제보 소프트 삭제 처리
+    /**
+     * 제보글 소프트 삭제
+     */
     public void delete(String deletedBy) {
         this.reportStatus = ReportStatus.REJECTED;
         softDelete(deletedBy);
     }
 
-    // AI 검증 결과 반영
+    /**
+     * AI 검증 결과 반영
+     * - 성공: APPROVED / SUCCESS
+     * - 실패: REJECTED / FAILED
+     */
     public void updateVerificationResult(boolean success, String message) {
         this.verificationMessage = message;
         if(success) {
@@ -85,8 +93,22 @@ public class Report extends Auditable {
         }
     }
 
-    // 포인트 지급 완료 표시
+    /**
+     * 포인트 지급 완료 상태 변경
+     */
     public void markPointRewarded() {
         this.isPointRewarded = true;
+    }
+
+    /**
+     * 제보글 제목 및 내용 수정
+     */
+    public void updateContent(String title, String content) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        if (content != null && !content.isBlank()) {
+            this.content = content;
+        }
     }
 }

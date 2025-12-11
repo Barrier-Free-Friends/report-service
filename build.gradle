@@ -57,6 +57,9 @@ dependencies {
     // Querydsl JPA
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
 
+    implementation 'org.springframework.kafka:spring-kafka'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+
 	compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 	runtimeOnly 'org.postgresql:postgresql'
