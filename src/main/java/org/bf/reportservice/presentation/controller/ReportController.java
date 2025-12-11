@@ -1,5 +1,6 @@
 package org.bf.reportservice.presentation.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bf.global.infrastructure.CustomResponse;
 import org.bf.global.infrastructure.success.GeneralSuccessCode;
@@ -24,7 +25,7 @@ public class ReportController {
      * 제보글 등록
      */
     @PostMapping
-    public CustomResponse<ReportResponse> createReport(@RequestBody ReportCreateRequest request) {
+    public CustomResponse<ReportResponse> createReport(@Valid @RequestBody ReportCreateRequest request) {
         ReportResponse response = reportService.createReport(request, securityUtils.getCurrentUserId());
         return CustomResponse.onSuccess(GeneralSuccessCode.CREATED, response);
     }
@@ -33,7 +34,7 @@ public class ReportController {
      * 제보글 수정
      */
     @PatchMapping("/{reportId}")
-    public CustomResponse<ReportResponse> updateReport(@PathVariable UUID reportId, @RequestBody ReportUpdateRequest request) {
+    public CustomResponse<ReportResponse> updateReport(@PathVariable UUID reportId, @Valid @RequestBody ReportUpdateRequest request) {
         ReportResponse response = reportService.updateReport(reportId, securityUtils.getCurrentUserId(), request);
         return CustomResponse.onSuccess(GeneralSuccessCode.OK, response);
     }
