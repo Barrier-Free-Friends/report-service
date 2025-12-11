@@ -2,6 +2,7 @@ package org.bf.reportservice.application;
 
 import lombok.RequiredArgsConstructor;
 import org.bf.global.infrastructure.exception.CustomException;
+import org.bf.reportservice.application.event.PointEventPublisher;
 import org.bf.reportservice.domain.entity.Report;
 import org.bf.reportservice.domain.entity.ReportImage;
 import org.bf.reportservice.domain.exception.ReportErrorCode;
@@ -10,11 +11,13 @@ import org.bf.reportservice.infrastructure.api.AiVerificationClient;
 import org.bf.reportservice.infrastructure.api.dto.AiImageRequest;
 import org.bf.reportservice.infrastructure.api.dto.AiVerificationResponse;
 import org.bf.reportservice.presentation.dto.ReportCreateRequest;
+import org.bf.reportservice.presentation.dto.ReportDeleteResponse;
 import org.bf.reportservice.presentation.dto.ReportResponse;
 import org.bf.reportservice.presentation.dto.ReportUpdateRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +25,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReportService {
 
+    private static final int POINT_REVOKE_PERIOD_DAYS = 7;
+
     private final ReportRepository reportRepository;
     private final AiVerificationClient aiVerificationClient;
+    private final PointEventPublisher pointEventPublisher;
 
     /**
      * 제보 등록
@@ -108,5 +114,48 @@ public class ReportService {
         report.updateContent(request.title(), request.content());
 
         return ReportResponse.from(report);
+    }
+
+    /**
+     * 제보글 삭제
+     */
+    @Transactional
+    public ReportDeleteResponse deleteReport(UUID reportId, UUID requesterUserId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new CustomException(ReportErrorCode.REPORT_NOT_FOUND));
+
+        // 작성자 본인 여부 확인
+        if (!report.getUserId().equals(requesterUserId)) {
+            throw new CustomException(ReportErrorCode.REPORT_FORBIDDEN);
+        }
+
+        // 이미 삭제된 제보글인지 확인
+        if (report.isDeleted()) {
+            throw new CustomException(ReportErrorCode.REPORT_ALREADY_DELETED);
+        }
+
+        boolean pointRevokeRequested = false;
+
+        // 작성 후 일주일 이내 회수 요청 시 이벤트 발행
+        if (report.isPointRewarded()) {
+            LocalDateTime createdAt = report.getCreatedAt();
+            LocalDateTime now = LocalDateTime.now();
+
+            boolean withinRevokePeriod = createdAt != null && createdAt.plusDays(POINT_REVOKE_PERIOD_DAYS).isAfter(now);
+
+            if (withinRevokePeriod) {
+                pointEventPublisher.publishPointRevokeEvent(report);
+                pointRevokeRequested = true;
+            }
+        }
+
+        // 소프트 삭제
+        report.delete(requesterUserId.toString());
+
+        return new ReportDeleteResponse(
+                report.getId(),
+                pointRevokeRequested,
+                report.getDeletedAt()
+        );
     }
 }
