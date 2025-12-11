@@ -72,9 +72,13 @@ public class Report extends Auditable {
     /**
      * 제보글 소프트 삭제
      */
-    public void delete(String deletedBy) {
-        this.reportStatus = ReportStatus.REJECTED;
-        softDelete(deletedBy);
+    public void delete(String username) {
+        this.reportStatus = ReportStatus.DELETED;
+        softDelete(username);
+    }
+
+    public boolean isDeleted() {
+        return this.reportStatus == ReportStatus.DELETED;
     }
 
     /**
