@@ -22,6 +22,24 @@ spring:
     open-in-view: false
     generate-ddl: true
 
+  kafka:
+    bootstrap-servers: code-factory.co.kr:3450 # 임시 : 카프카 설치 후 변경 예정
+
+    producer:
+      properties:
+        spring.json.add.type.headers: true
+        spring.json.trusted.packages: "*"
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+
+    consumer:
+      group-id: report-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+
   config:
     import: 'optional:configserver: '
   cloud:
