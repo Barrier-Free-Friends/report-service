@@ -33,7 +33,7 @@ public class ReportService {
 
     /**
      * 제보 등록
-     * 1) 요청 이미지 유효성 검증
+     * 1) 요청 이미지, 카테고리 유효성 검증
      * 2) AI 서비스에 이미지 검증 요청
      * 3) 검증 성공 시 Report 및 ReportImage 엔티티 생성
      * 4) 검증 결과 반영 상태 저장 후 응답 반환
@@ -43,6 +43,10 @@ public class ReportService {
 
         if (request.images() == null || request.images().isEmpty() ) {
             throw new CustomException(ReportErrorCode.IMAGE_REQUIRED);
+        }
+
+        if (request.category() == null) {
+            throw new CustomException(ReportErrorCode.CATEGORY_REQUIRED);
         }
 
         // AI 요청용 DTO 변환
@@ -94,9 +98,11 @@ public class ReportService {
 
     /**
      * 제보글 수정
-     * 1) 존재하지 않는 글이면 예외 발생
+     * 1) 수정 대상 제보 존재 여부 확인
      * 2) 요청자가 작성자가 맞는지 확인
-     * 3) 제목/내용만 수정 (이미지 수정 불가)
+     * 3) 카테고리 필수값 검증
+     * 4) 제목 및 내용 수정 (이미지 수정 불가)
+     * 5) 카테고리 수정
      */
     @Transactional
     public ReportResponse updateReport(UUID reportId, UUID userId, ReportUpdateRequest request) {
@@ -110,8 +116,15 @@ public class ReportService {
             throw new CustomException(ReportErrorCode.REPORT_FORBIDDEN);
         }
 
+        if (request.category() == null) {
+            throw new CustomException(ReportErrorCode.CATEGORY_REQUIRED);
+        }
+
         // 제목 및 내용 수정
         report.updateContent(request.title(), request.content());
+
+        // 카테고리 수정
+        report.updateCategory(request.category());
 
         return ReportResponse.from(report);
     }

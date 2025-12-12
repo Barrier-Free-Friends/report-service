@@ -33,6 +33,10 @@ public class Report extends Auditable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private ReportCategory category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ReportStatus reportStatus;
 
     @Enumerated(EnumType.STRING)
@@ -44,14 +48,12 @@ public class Report extends Auditable {
     @Column(nullable = false)
     private boolean isPointRewarded;
 
-    private String category;
-
     // 일대다 관계 설정
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<ReportImage> images = new ArrayList<>();
 
     @Builder
-    private Report(UUID userId, String title, String content, String category) {
+    private Report(UUID userId, String title, String content, ReportCategory category) {
         this.userId = userId;
         this.title = title;
         this.content = content;
@@ -67,18 +69,6 @@ public class Report extends Auditable {
     public void addImage(ReportImage image) {
         this.images.add(image);
         image.setReport(this);
-    }
-
-    /**
-     * 제보글 소프트 삭제
-     */
-    public void delete(String username) {
-        this.reportStatus = ReportStatus.DELETED;
-        softDelete(username);
-    }
-
-    public boolean isDeleted() {
-        return this.reportStatus == ReportStatus.DELETED;
     }
 
     /**
@@ -98,13 +88,6 @@ public class Report extends Auditable {
     }
 
     /**
-     * 포인트 지급 완료 상태 변경
-     */
-    public void markPointRewarded() {
-        this.isPointRewarded = true;
-    }
-
-    /**
      * 제보글 제목 및 내용 수정
      */
     public void updateContent(String title, String content) {
@@ -114,5 +97,34 @@ public class Report extends Auditable {
         if (content != null && !content.isBlank()) {
             this.content = content;
         }
+    }
+
+    /**
+     * 카테고리 수정
+     */
+    public void updateCategory(ReportCategory category) {
+        if (category == null) {
+            return;
+        }
+        this.category = category;
+    }
+
+    /**
+     * 제보글 소프트 삭제
+     */
+    public void delete(String username) {
+        this.reportStatus = ReportStatus.DELETED;
+        softDelete(username);
+    }
+
+    public boolean isDeleted() {
+        return this.reportStatus == ReportStatus.DELETED;
+    }
+
+    /**
+     * 포인트 지급 완료 상태 변경
+     */
+    public void markPointRewarded() {
+        this.isPointRewarded = true;
     }
 }

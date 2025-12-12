@@ -13,6 +13,7 @@ public enum ReportErrorCode implements BaseErrorCode {
     IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "REPORT_IMAGE_REQUIRED_400", "제보글 등록을 위해서는 최소 한 장 이상의 이미지를 첨부해야 합니다."),
     AI_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "REPORT_AI_VERIFICATION_FAILED_400", "이미지 검증에 실패하여 제보글을 등록할 수 없습니다."),
     AI_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "REPORT_AI_SERVICE_ERROR_500", "이미지 검증 서비스 호출 중 오류가 발생했습니다."),
+    CATEGORY_REQUIRED(HttpStatus.BAD_REQUEST, "REPORT_CATEGORY_REQUIRED_400", "제보 유형이 선택되지 않았습니다."),
 
     // 조회/수정/삭제 에러
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_NOT_FOUND_404", "존재하지 않는 제보글입니다."),
