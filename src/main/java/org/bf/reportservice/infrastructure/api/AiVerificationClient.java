@@ -12,7 +12,7 @@ import java.util.List;
 @FeignClient(name = "image-ai-service")
 public interface AiVerificationClient {
 
-    @PostMapping("/v1/image")
+    @PostMapping("/analyze")
     AiVerificationResponse verify(@RequestBody AiVerificationRequest body);
 
     default AiVerificationResponse requestVerification(List<AiImageRequest> images) {
