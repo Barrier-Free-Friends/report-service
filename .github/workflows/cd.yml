@@ -84,6 +84,8 @@ jobs:
             ENV_DB_USERNAME=${{ secrets.DB_USERNAME }}
             ENV_DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             ENV_DB_DDL_AUTO=update
+            ENV_AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            ENV_AWS_SECRET_ACCESS_KEY=${{ secrets.SECRET_ACCESS_KEY }}
 
       # ECS 서비스 배포 (최종 단계)
       - name: Deploy to Amazon ECS Service
