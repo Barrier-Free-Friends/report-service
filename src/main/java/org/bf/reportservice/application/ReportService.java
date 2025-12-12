@@ -3,6 +3,7 @@ package org.bf.reportservice.application;
 import lombok.RequiredArgsConstructor;
 import org.bf.global.infrastructure.exception.CustomException;
 import org.bf.reportservice.application.event.PointEventPublisher;
+import org.bf.reportservice.domain.entity.ImageTag;
 import org.bf.reportservice.domain.entity.Report;
 import org.bf.reportservice.domain.entity.ReportImage;
 import org.bf.reportservice.domain.exception.ReportErrorCode;
@@ -33,7 +34,7 @@ public class ReportService {
 
     /**
      * 제보 등록
-     * 1) 요청 이미지, 카테고리 유효성 검증
+     * 1) 요청 이미지 유효성 검증
      * 2) AI 서비스에 이미지 검증 요청
      * 3) 검증 성공 시 Report 및 ReportImage 엔티티 생성
      * 4) 검증 결과 반영 상태 저장 후 응답 반환
@@ -43,10 +44,6 @@ public class ReportService {
 
         if (request.images() == null || request.images().isEmpty() ) {
             throw new CustomException(ReportErrorCode.IMAGE_REQUIRED);
-        }
-
-        if (request.category() == null) {
-            throw new CustomException(ReportErrorCode.CATEGORY_REQUIRED);
         }
 
         // AI 요청용 DTO 변환
@@ -67,16 +64,24 @@ public class ReportService {
             throw new CustomException(ReportErrorCode.AI_SERVICE_ERROR);
         }
 
+        // AI 응답 유효성
+        if (ai == null) {
+            throw new CustomException(ReportErrorCode.AI_SERVICE_ERROR);
+        }
+
         // 검증 실패 시 등록 불가
-        if (ai == null || !ai.verified()) {
+        if (!ai.isObstacle()) {
             throw new CustomException(ReportErrorCode.AI_VERIFICATION_FAILED);
         }
+
+        // 검증 성공 시 등록
+        ImageTag tag = ImageTag.from(ai.tag());
 
         Report report = Report.builder()
                 .userId(userId)
                 .title(request.title())
                 .content(request.content())
-                .category(request.category())
+                .tag(tag)
                 .build();
 
         List<ReportImage> images = request.images().stream()
@@ -90,7 +95,7 @@ public class ReportService {
         images.forEach(report::addImage);
 
         // 검증 결과 반영
-        report.updateVerificationResult(true, ai.message());
+        report.updateVerificationResult(true, ai.analysisResult());
 
         Report saved = reportRepository.save(report);
         return ReportResponse.from(saved);
@@ -100,9 +105,7 @@ public class ReportService {
      * 제보글 수정
      * 1) 수정 대상 제보 존재 여부 확인
      * 2) 요청자가 작성자가 맞는지 확인
-     * 3) 카테고리 필수값 검증
-     * 4) 제목 및 내용 수정 (이미지 수정 불가)
-     * 5) 카테고리 수정
+     * 3) 제목 및 내용 수정 (이미지 수정 불가)
      */
     @Transactional
     public ReportResponse updateReport(UUID reportId, UUID userId, ReportUpdateRequest request) {
@@ -116,15 +119,8 @@ public class ReportService {
             throw new CustomException(ReportErrorCode.REPORT_FORBIDDEN);
         }
 
-        if (request.category() == null) {
-            throw new CustomException(ReportErrorCode.CATEGORY_REQUIRED);
-        }
-
         // 제목 및 내용 수정
         report.updateContent(request.title(), request.content());
-
-        // 카테고리 수정
-        report.updateCategory(request.category());
 
         return ReportResponse.from(report);
     }
