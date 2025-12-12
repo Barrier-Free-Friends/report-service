@@ -1,10 +1,12 @@
 package org.bf.reportservice.presentation.dto;
 
+import org.bf.reportservice.domain.entity.ReportCategory;
+
 import java.util.List;
 
-public record ReportRequest(
+public record ReportCreateRequest(
         String title,
         String content,
-        String category,
+        ReportCategory category,
         List<ReportImageRequest> images
 ) {}
