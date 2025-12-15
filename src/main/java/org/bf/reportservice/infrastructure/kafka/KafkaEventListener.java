@@ -2,7 +2,7 @@ package org.bf.reportservice.infrastructure.kafka;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bf.reportservice.domain.event.ReportCreatedEvent;
+import org.bf.global.infrastructure.event.ReportCreatedEvent;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 

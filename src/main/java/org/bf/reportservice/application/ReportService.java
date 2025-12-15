@@ -1,8 +1,12 @@
 package org.bf.reportservice.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bf.global.domain.event.DomainEventBuilder;
+import org.bf.global.domain.event.EventPublisher;
+import org.bf.global.infrastructure.event.ReportCreatedEvent;
+import org.bf.global.infrastructure.event.ReportDeletedEvent;
 import org.bf.global.infrastructure.exception.CustomException;
-import org.bf.reportservice.application.event.PointEventPublisher;
 import org.bf.reportservice.domain.entity.ImageTag;
 import org.bf.reportservice.domain.entity.Report;
 import org.bf.reportservice.domain.entity.ReportImage;
@@ -22,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -30,7 +35,8 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final AiVerificationClient aiVerificationClient;
-    private final PointEventPublisher pointEventPublisher;
+    private final EventPublisher eventPublisher;
+    private final DomainEventBuilder eventBuilder;
 
     /**
      * 제보 등록
@@ -69,6 +75,8 @@ public class ReportService {
             throw new CustomException(ReportErrorCode.AI_SERVICE_ERROR);
         }
 
+        log.info("반환값: {}", ai);
+
         // 검증 실패 시 등록 불가
         if (!ai.isObstacle()) {
             throw new CustomException(ReportErrorCode.AI_VERIFICATION_FAILED);
@@ -98,6 +106,18 @@ public class ReportService {
         report.updateVerificationResult(true, ai.analysisResult());
 
         Report saved = reportRepository.save(report);
+
+        // 제보 생성 이벤트 발행
+        ReportCreatedEvent rawEvent = new ReportCreatedEvent(
+                saved.getUserId(),
+                tag.getPoint(),
+                saved.getId(),
+                "p_report"
+        );
+
+        ReportCreatedEvent event = eventBuilder.build(rawEvent);
+        eventPublisher.publish(event);
+
         return ReportResponse.from(saved);
     }
 
@@ -145,15 +165,25 @@ public class ReportService {
 
         boolean pointRevokeRequested = false;
 
-        // 작성 후 일주일 이내 회수 요청 시 이벤트 발행
+        // 제보글 작성 후 7일 이내에 삭제된 경우에만 포인트 회수 이벤트 발행
         if (report.isPointRewarded()) {
             LocalDateTime createdAt = report.getCreatedAt();
             LocalDateTime now = LocalDateTime.now();
 
-            boolean withinRevokePeriod = createdAt != null && createdAt.plusDays(POINT_REVOKE_PERIOD_DAYS).isAfter(now);
+            // 7일 경과 여부 확인
+            boolean isWithinRevokePeriod = createdAt != null && createdAt.plusDays(POINT_REVOKE_PERIOD_DAYS).isAfter(now);
 
-            if (withinRevokePeriod) {
-                pointEventPublisher.publishPointRevokeEvent(report);
+            if (isWithinRevokePeriod) {
+                // 포인트 회수 처리를 위한 제보 삭제 도메인 이벤트 발행
+                ReportDeletedEvent rawEvent = new ReportDeletedEvent(
+                        report.getUserId(),
+                        report.getId(),
+                        "p_report"
+                );
+
+                ReportDeletedEvent event = eventBuilder.build(rawEvent);
+                eventPublisher.publish(event);
+
                 pointRevokeRequested = true;
             }
         }
