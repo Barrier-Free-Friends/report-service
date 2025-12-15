@@ -23,7 +23,7 @@ spring:
     generate-ddl: true
 
   kafka:
-    bootstrap-servers: code-factory.co.kr:3450 # 임시 : 카프카 설치 후 변경 예정
+    bootstrap-servers: 34.64.55.76:9092,34.64.55.76:9093,34.64.55.76:9094
 
     producer:
       properties:
