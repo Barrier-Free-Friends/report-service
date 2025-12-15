@@ -2,7 +2,7 @@ package org.bf.reportservice.kafka;
 
 import org.bf.global.domain.event.DomainEventBuilder;
 import org.bf.global.domain.event.EventPublisher;
-import org.bf.reportservice.domain.event.ReportCreatedEvent;
+import org.bf.global.infrastructure.event.ReportCreatedEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
