@@ -6,6 +6,8 @@ import org.bf.global.domain.event.DomainEventBuilder;
 import org.bf.global.domain.event.EventPublisher;
 import org.bf.global.infrastructure.event.ReportCreatedEvent;
 import org.bf.global.infrastructure.event.ReportDeletedEvent;
+import org.bf.global.infrastructure.event.ReportMapImageInfo;
+import org.bf.global.infrastructure.event.ReportMapInfoEvent;
 import org.bf.global.infrastructure.exception.CustomException;
 import org.bf.reportservice.domain.entity.ImageTag;
 import org.bf.reportservice.domain.entity.Report;
@@ -43,7 +45,9 @@ public class ReportService {
      * 1) 요청 이미지 유효성 검증
      * 2) AI 서비스에 이미지 검증 요청
      * 3) 검증 성공 시 Report 및 ReportImage 엔티티 생성
-     * 4) 검증 결과 반영 상태 저장 후 응답 반환
+     * 4) 검증 결과 반영 후 저장
+     * 5) Report 생성에 따른 포인트 지급 / 지도 반영 이벤트 발행
+     * 6) 응답 반환
      */
     @Transactional
     public ReportResponse createReport(ReportCreateRequest request, UUID userId) {
@@ -107,7 +111,7 @@ public class ReportService {
 
         Report saved = reportRepository.save(report);
 
-        // 제보 생성 이벤트 발행
+        // Report 생성에 따른 포인트 지급 이벤트 발행
         ReportCreatedEvent rawEvent = new ReportCreatedEvent(
                 saved.getUserId(),
                 tag.getPoint(),
@@ -115,8 +119,32 @@ public class ReportService {
                 "p_report"
         );
 
-        ReportCreatedEvent event = eventBuilder.build(rawEvent);
-        eventPublisher.publish(event);
+        ReportCreatedEvent pointEvent = eventBuilder.build(rawEvent);
+        eventPublisher.publish(pointEvent);
+
+        // todo: 포인트 획득 성공 시에만 반영되도록 수정
+        report.markPointRewarded();
+
+        // 맵 서비스용 이미지 정보 구성
+        List<ReportMapImageInfo> mapImages = request.images().stream()
+                .map(i -> new ReportMapImageInfo(
+                        i.latitude(),
+                        i.longitude(),
+                        i.address()
+                ))
+                .toList();
+
+        // Report 생성에 따른 지도 반영 이벤트 발행
+        ReportMapInfoEvent mapRawEvent = new ReportMapInfoEvent(
+                saved.getUserId(),
+                tag.getCode(),
+                mapImages,
+                saved.getId(),
+                "p_report"
+        );
+
+        ReportMapInfoEvent mapEvent = eventBuilder.build(mapRawEvent);
+        eventPublisher.publish(mapEvent);
 
         return ReportResponse.from(saved);
     }
