@@ -5,5 +5,11 @@ import java.util.List;
 public record ReportCreateRequest(
         String title,
         String content,
-        List<ReportImageRequest> images
-) {}
+        List<ImageMeta> images
+) {
+    public record ImageMeta(
+            Double latitude,
+            Double longitude,
+            String address
+    ) {}
+}

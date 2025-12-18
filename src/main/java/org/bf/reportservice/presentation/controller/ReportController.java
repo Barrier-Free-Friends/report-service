@@ -11,8 +11,11 @@ import org.bf.reportservice.application.query.ReportQueryService;
 import org.bf.reportservice.presentation.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -27,9 +30,10 @@ public class ReportController {
     /**
      * 제보글 등록
      */
-    @PostMapping
-    public CustomResponse<ReportResponse> createReport(@Valid @RequestBody ReportCreateRequest request) {
-        ReportResponse response = reportService.createReport(request, securityUtils.getCurrentUserId());
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public CustomResponse<ReportResponse> createReport(@Valid @RequestPart("request") ReportCreateRequest request,
+                                                       @RequestPart("files") List<MultipartFile> files) {
+        ReportResponse response = reportService.createReport(request, files, securityUtils.getCurrentUserId());
         return CustomResponse.onSuccess(GeneralSuccessCode.CREATED, response);
     }
 
