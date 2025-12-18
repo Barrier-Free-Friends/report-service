@@ -30,9 +30,13 @@ public class ReportImage {
     private Double longitude;
     private String address;
 
+    @Column(nullable = false, unique = true, length = 64)
+    private String imageHash;
+
     @Builder
-    public ReportImage(String fileUrl, Double latitude, Double longitude, String address) {
+    public ReportImage(String fileUrl, String imageHash, Double latitude, Double longitude, String address) {
         this.fileUrl = fileUrl;
+        this.imageHash = imageHash;
         this.latitude = latitude;
         this.longitude = longitude;
         this.address = address;
@@ -42,9 +46,10 @@ public class ReportImage {
         this.report = report;
     }
 
-    public static ReportImage create(String fileUrl, Double latitude, Double longitude, String address) {
+    public static ReportImage create(String fileUrl, String imageHash, Double latitude, Double longitude, String address) {
         return ReportImage.builder()
                 .fileUrl(fileUrl)
+                .imageHash(imageHash)
                 .latitude(latitude)
                 .longitude(longitude)
                 .address(address)
