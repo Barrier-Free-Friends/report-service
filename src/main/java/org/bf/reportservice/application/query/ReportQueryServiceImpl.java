@@ -1,11 +1,12 @@
-package org.bf.reportservice.application.query.impl;
+package org.bf.reportservice.application.query;
 
 import lombok.RequiredArgsConstructor;
 import org.bf.global.infrastructure.exception.CustomException;
-import org.bf.reportservice.application.query.ReportQueryService;
 import org.bf.reportservice.domain.exception.ReportErrorCode;
 import org.bf.reportservice.infrastructure.persistence.ReportQueryRepository;
 import org.bf.reportservice.presentation.dto.ReportDetailResponse;
+import org.bf.reportservice.presentation.dto.ReportSearchRequest;
+import org.bf.reportservice.presentation.dto.ReportSearchResponse;
 import org.bf.reportservice.presentation.dto.ReportSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,5 +31,10 @@ public class ReportQueryServiceImpl implements ReportQueryService {
     public ReportDetailResponse getReport(UUID reportId) {
         return reportQueryRepository.findReportDetail(reportId)
                 .orElseThrow(() -> new CustomException(ReportErrorCode.REPORT_NOT_FOUND));
+    }
+
+    @Override
+    public Page<ReportSearchResponse> searchReports(ReportSearchRequest request, Pageable pageable) {
+        return reportQueryRepository.searchReports(request, pageable);
     }
 }

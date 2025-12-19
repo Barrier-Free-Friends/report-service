@@ -1,5 +1,6 @@
 package org.bf.reportservice.application;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bf.global.domain.event.DomainEventBuilder;
@@ -21,10 +22,15 @@ import org.bf.reportservice.presentation.dto.ReportCreateRequest;
 import org.bf.reportservice.presentation.dto.ReportDeleteResponse;
 import org.bf.reportservice.presentation.dto.ReportResponse;
 import org.bf.reportservice.presentation.dto.ReportUpdateRequest;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,25 +45,51 @@ public class ReportService {
     private final AiVerificationClient aiVerificationClient;
     private final EventPublisher eventPublisher;
     private final DomainEventBuilder eventBuilder;
+    private final ImageUploadService imageUploadService;
 
     /**
      * 제보 등록
-     * 1) 요청 이미지 유효성 검증
+     * 1) 요청 이미지 메타 및 파일 유효성 검증
      * 2) AI 서비스에 이미지 검증 요청
      * 3) 검증 성공 시 Report 및 ReportImage 엔티티 생성
-     * 4) 검증 결과 반영 후 저장
-     * 5) Report 생성에 따른 포인트 지급 / 지도 반영 이벤트 발행
+     * 4) 검증 결과 및 상태 반영 후 저장
+     * 5) 제보 등록에 따른 포인트 지급 / 지도 반영 이벤트 발행
      * 6) 응답 반환
      */
     @Transactional
-    public ReportResponse createReport(ReportCreateRequest request, UUID userId) {
+    public ReportResponse createReport(@Valid ReportCreateRequest request, List<MultipartFile> files, UUID userId) {
 
-        if (request.images() == null || request.images().isEmpty() ) {
+        // 이미지 메타 정보 존재 여부
+        if (request == null || request.images() == null || request.images().isEmpty()) {
             throw new CustomException(ReportErrorCode.IMAGE_REQUIRED);
         }
 
+        // 실제 업로드 파일 존재 여부
+        if (files == null || files.isEmpty()) {
+            throw new CustomException(ReportErrorCode.IMAGE_REQUIRED);
+        }
+
+        // 업로드 파일과 이미지 메타 정보의 1:1 매핑 검증
+        if (request.images().size() != files.size()) {
+            throw new CustomException(ReportErrorCode.INVALID_IMAGE_COUNT);
+        }
+
+        // 업로드 파일과 메타 정보를 순서대로 매핑하여 이미지 업로드 처리
+        List<UploadedImage> uploaded = new ArrayList<>();
+
+        for (int i = 0; i < files.size(); i++) {
+            MultipartFile file = files.get(i);
+            var meta = request.images().get(i);
+
+            String hash = sha256(file);
+            String key = buildS3Key(userId, file);
+            String url = imageUploadService.upload(key, file);
+
+            uploaded.add(new UploadedImage(url, hash, meta.latitude(), meta.longitude(), meta.address()));
+        }
+
         // AI 요청용 DTO 변환
-        List<AiImageRequest> aiImages = request.images().stream()
+        List<AiImageRequest> aiImages = uploaded.stream()
                 .map(i -> new AiImageRequest(
                         i.fileUrl(),
                         i.latitude(),
@@ -96,20 +128,27 @@ public class ReportService {
                 .tag(tag)
                 .build();
 
-        List<ReportImage> images = request.images().stream()
+        uploaded.stream()
                 .map(i -> ReportImage.create(
                         i.fileUrl(),
+                        i.imageHash(),
                         i.latitude(),
                         i.longitude(),
                         i.address()
                 ))
-                .toList();
-        images.forEach(report::addImage);
+                .forEach(report::addImage);
 
         // 검증 결과 반영
         report.updateVerificationResult(true, ai.analysisResult());
 
-        Report saved = reportRepository.save(report);
+        Report saved;
+        try {
+            saved = reportRepository.saveAndFlush(report);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ReportErrorCode.IMAGE_ALREADY_REGISTERED);
+        } catch (ConstraintViolationException e) {
+            throw new CustomException(ReportErrorCode.IMAGE_ALREADY_REGISTERED);
+        }
 
         // Report 생성에 따른 포인트 지급 이벤트 발행
         ReportCreatedEvent rawEvent = new ReportCreatedEvent(
@@ -126,11 +165,10 @@ public class ReportService {
         report.markPointRewarded();
 
         // 맵 서비스용 이미지 정보 구성
-        List<ReportMapImageInfo> mapImages = request.images().stream()
+        List<ReportMapImageInfo> mapImages = uploaded.stream()
                 .map(i -> new ReportMapImageInfo(
                         i.latitude(),
-                        i.longitude(),
-                        i.address()
+                        i.longitude()
                 ))
                 .toList();
 
@@ -224,5 +262,42 @@ public class ReportService {
                 pointRevokeRequested,
                 report.getDeletedAt()
         );
+    }
+
+    private record UploadedImage(
+            String fileUrl, String imageHash, Double latitude, Double longitude, String address
+    ) {}
+
+    /**
+     * S3에 저장될 경로 생성
+     */
+    private String buildS3Key(UUID userId, MultipartFile file) {
+        String ext = extractExt(file.getOriginalFilename());
+        return "images/report/" + userId + "/" + UUID.randomUUID() + "." + ext;
+    }
+
+    /**
+     * 확장자 추출
+     */
+    private String extractExt(String filename) {
+        if (filename == null) return "jpg";
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) return "jpg";
+        return filename.substring(dot + 1).toLowerCase();
+    }
+
+    /**
+     * 파일 내용으로 해시 생성
+     */
+    private String sha256(MultipartFile file) {
+        try {
+            var md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(file.getBytes());
+            var sb = new StringBuilder();
+            for (byte b : digest) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            throw new CustomException(ReportErrorCode.FILE_HASH_FAILED);
+        }
     }
 }
