@@ -37,6 +37,9 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
     private static final QReport report = QReport.report;
     private static final QReportImage image = QReportImage.reportImage;
 
+    /**
+     * 제보글 목록 조회
+     */
     @Override
     public Page<ReportSummaryResponse> findReports(Pageable pageable) {
         // 삭제된 제보글 제외한 목록 조회
@@ -66,6 +69,9 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
     }
 
+    /**
+     * 제보글 상세 조회
+     */
     @Override
     public Optional<ReportDetailResponse> findReportDetail(UUID reportId) {
 

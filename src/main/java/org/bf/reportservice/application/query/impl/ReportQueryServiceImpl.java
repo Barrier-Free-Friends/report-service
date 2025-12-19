@@ -23,17 +23,26 @@ public class ReportQueryServiceImpl implements ReportQueryService {
 
     private final ReportQueryRepository reportQueryRepository;
 
+    /**
+     * 제보글 목록 조회
+     */
     @Override
     public Page<ReportSummaryResponse> getReports(Pageable pageable) {
         return reportQueryRepository.findReports(pageable);
     }
 
+    /**
+     * 제보글 상세 조회
+     */
     @Override
     public ReportDetailResponse getReport(UUID reportId) {
         return reportQueryRepository.findReportDetail(reportId)
                 .orElseThrow(() -> new CustomException(ReportErrorCode.REPORT_NOT_FOUND));
     }
 
+    /**
+     * 제보글 검색
+     */
     @Override
     public Page<ReportSearchResponse> searchReports(ReportSearchRequest request, Pageable pageable) {
         return reportQueryRepository.searchReports(request, pageable);
