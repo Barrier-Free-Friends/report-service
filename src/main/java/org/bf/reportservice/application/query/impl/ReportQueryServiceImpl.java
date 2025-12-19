@@ -1,7 +1,8 @@
-package org.bf.reportservice.application.query;
+package org.bf.reportservice.application.query.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.bf.global.infrastructure.exception.CustomException;
+import org.bf.reportservice.application.query.ReportQueryService;
 import org.bf.reportservice.domain.exception.ReportErrorCode;
 import org.bf.reportservice.infrastructure.persistence.ReportQueryRepository;
 import org.bf.reportservice.presentation.dto.ReportDetailResponse;
