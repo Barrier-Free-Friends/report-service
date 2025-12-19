@@ -3,6 +3,9 @@ package org.bf.reportservice.domain.entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * 제보 이미지 기반 장애물 유형 및 포인트 정보
+ */
 @Getter
 @RequiredArgsConstructor
 public enum ImageTag {

@@ -22,6 +22,9 @@ public class ReportDomainEventPublisherImpl implements ReportDomainEventPublishe
     private final EventPublisher eventPublisher;
     private final DomainEventBuilder eventBuilder;
 
+    /**
+     * 제보 등록 도메인 이벤트 발행
+     */
     @Override
     public void publishCreated(Report saved, ImageTag tag, List<ReportImageLocation> locations) {
 
@@ -36,7 +39,6 @@ public class ReportDomainEventPublisherImpl implements ReportDomainEventPublishe
         ReportCreatedEvent pointEvent = eventBuilder.build(rawEvent);
         eventPublisher.publish(pointEvent);
 
-        // todo: 포인트 획득 성공 시에만 반영되도록 수정
         saved.markPointRewarded();
 
         // 맵 서비스용 이미지 정보 구성

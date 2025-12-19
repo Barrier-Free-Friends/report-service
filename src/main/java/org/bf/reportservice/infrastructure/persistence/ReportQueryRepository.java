@@ -11,7 +11,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ReportQueryRepository {
+    /**
+     * 제보글 목록 조회
+     */
     Page<ReportSummaryResponse> findReports(Pageable pageable);
+
+    /**
+     * 제보글 상세 조회
+     */
     Optional<ReportDetailResponse> findReportDetail(UUID reportId);
+
+    /**
+     * 제보글 검색
+     */
     Page<ReportSearchResponse> searchReports(ReportSearchRequest request, Pageable pageable);
 }
