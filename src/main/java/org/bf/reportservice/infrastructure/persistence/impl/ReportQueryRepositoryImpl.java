@@ -1,4 +1,4 @@
-package org.bf.reportservice.infrastructure.persistence;
+package org.bf.reportservice.infrastructure.persistence.impl;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -11,6 +11,7 @@ import org.bf.reportservice.domain.entity.ImageTag;
 import org.bf.reportservice.domain.entity.QReport;
 import org.bf.reportservice.domain.entity.QReportImage;
 import org.bf.reportservice.domain.entity.ReportStatus;
+import org.bf.reportservice.infrastructure.persistence.ReportQueryRepository;
 import org.bf.reportservice.presentation.dto.ReportDetailResponse;
 import org.bf.reportservice.presentation.dto.ReportSearchRequest;
 import org.bf.reportservice.presentation.dto.ReportSearchResponse;
@@ -36,6 +37,9 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
     private static final QReport report = QReport.report;
     private static final QReportImage image = QReportImage.reportImage;
 
+    /**
+     * 제보글 목록 조회
+     */
     @Override
     public Page<ReportSummaryResponse> findReports(Pageable pageable) {
         // 삭제된 제보글 제외한 목록 조회
@@ -65,6 +69,9 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
     }
 
+    /**
+     * 제보글 상세 조회
+     */
     @Override
     public Optional<ReportDetailResponse> findReportDetail(UUID reportId) {
 
