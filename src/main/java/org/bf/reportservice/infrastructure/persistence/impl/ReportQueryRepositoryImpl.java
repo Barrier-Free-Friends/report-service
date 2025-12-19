@@ -1,4 +1,4 @@
-package org.bf.reportservice.infrastructure.persistence;
+package org.bf.reportservice.infrastructure.persistence.impl;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -11,6 +11,7 @@ import org.bf.reportservice.domain.entity.ImageTag;
 import org.bf.reportservice.domain.entity.QReport;
 import org.bf.reportservice.domain.entity.QReportImage;
 import org.bf.reportservice.domain.entity.ReportStatus;
+import org.bf.reportservice.infrastructure.persistence.ReportQueryRepository;
 import org.bf.reportservice.presentation.dto.ReportDetailResponse;
 import org.bf.reportservice.presentation.dto.ReportSearchRequest;
 import org.bf.reportservice.presentation.dto.ReportSearchResponse;
