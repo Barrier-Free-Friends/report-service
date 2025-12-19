@@ -1,6 +1,8 @@
 package org.bf.reportservice.infrastructure.persistence;
 
 import org.bf.reportservice.presentation.dto.ReportDetailResponse;
+import org.bf.reportservice.presentation.dto.ReportSearchRequest;
+import org.bf.reportservice.presentation.dto.ReportSearchResponse;
 import org.bf.reportservice.presentation.dto.ReportSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,4 +13,5 @@ import java.util.UUID;
 public interface ReportQueryRepository {
     Page<ReportSummaryResponse> findReports(Pageable pageable);
     Optional<ReportDetailResponse> findReportDetail(UUID reportId);
+    Page<ReportSearchResponse> searchReports(ReportSearchRequest request, Pageable pageable);
 }

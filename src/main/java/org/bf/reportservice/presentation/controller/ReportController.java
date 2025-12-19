@@ -66,8 +66,16 @@ public class ReportController {
     /**
      * 제보글 상세 조회
      */
-    @GetMapping("/{reportId}")
+    @GetMapping("/detail/{reportId}")
     public CustomResponse<ReportDetailResponse> getReport(@PathVariable UUID reportId) {
         return CustomResponse.onSuccess(GeneralSuccessCode.OK, reportQueryService.getReport(reportId));
+    }
+
+    /**
+     * 제보글 검색
+     */
+    @GetMapping("/search")
+    public CustomResponse<Page<ReportSearchResponse>> searchReports(@ModelAttribute ReportSearchRequest request, Pageable pageable) {
+        return CustomResponse.onSuccess(GeneralSuccessCode.OK, reportQueryService.searchReports(request, pageable));
     }
 }
