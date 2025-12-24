@@ -42,7 +42,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
      */
     @Override
     public Page<ReportSummaryResponse> findReports(Pageable pageable) {
-        // 삭제된 제보글 제외한 목록 조회
+        // AI 이미지 검증을 통과한 제보글 목록 조회
         List<OrderSpecifier<?>> orders = toOrderSpecifiers(pageable.getSort());
 
         List<ReportSummaryResponse> content = queryFactory
@@ -54,7 +54,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
                         report.createdAt
                 ))
                 .from(report)
-                .where(report.reportStatus.ne(ReportStatus.DELETED))
+                .where(report.reportStatus.eq(ReportStatus.APPROVED))
                 .orderBy(orders.toArray(new OrderSpecifier[0]))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -63,7 +63,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
         Long total = queryFactory
                 .select(report.id.count())
                 .from(report)
-                .where(report.reportStatus.ne(ReportStatus.DELETED))
+                .where(report.reportStatus.eq(ReportStatus.APPROVED))
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
@@ -88,7 +88,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
                 .from(report)
                 .where(
                         report.id.eq(reportId),
-                        report.reportStatus.ne(ReportStatus.DELETED)
+                        report.reportStatus.eq(ReportStatus.APPROVED)
                 )
                 .fetchOne();
 
@@ -126,7 +126,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
 
     /**
      * 제보글 검색
-     * - 삭제된 제보글 제외
+     * - AI 이미지 검증을 통과한 제보글만 검색 대상 (APPROVED)
      * - keyword(title/content), tag, 기간 조건 적용
      */
     @Override
@@ -142,7 +142,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
                 ))
                 .from(report)
                 .where(
-                        report.reportStatus.ne(ReportStatus.DELETED),
+                        report.reportStatus.eq(ReportStatus.APPROVED),
                         keywordContains(request.keyword()),
                         tagEq(request.tag()),
                         createdAfter(request.from()),
@@ -157,7 +157,7 @@ public class ReportQueryRepositoryImpl implements ReportQueryRepository {
                 .select(report.count())
                 .from(report)
                 .where(
-                        report.reportStatus.ne(ReportStatus.DELETED),
+                        report.reportStatus.eq(ReportStatus.APPROVED),
                         keywordContains(request.keyword()),
                         tagEq(request.tag()),
                         createdAfter(request.from()),

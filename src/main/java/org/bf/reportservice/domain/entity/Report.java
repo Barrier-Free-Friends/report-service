@@ -32,7 +32,6 @@ public class Report extends Auditable {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private ImageTag tag;
 
     @Enumerated(EnumType.STRING)
@@ -116,5 +115,12 @@ public class Report extends Auditable {
      */
     public void markPointRewarded() {
         this.isPointRewarded = true;
+    }
+
+    /**
+     * AI 검증 완료 이후 장애물 태그 반영
+     */
+    public void updateTag(ImageTag tag) {
+        this.tag = tag;
     }
 }
